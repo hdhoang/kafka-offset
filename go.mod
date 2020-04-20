@@ -10,6 +10,7 @@ require (
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/olivere/elastic v6.2.29+incompatible
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
 	github.com/sirupsen/logrus v1.5.0
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 )

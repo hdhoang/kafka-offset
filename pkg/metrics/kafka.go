@@ -41,6 +41,7 @@ var (
 	sourceInsecure       = flag.Bool("source-ssl-insecure", false, "Kafka insecure ssl connection")
 	sourceUsername       = flag.String("source-sasl-username", os.Getenv("SOURCE_KAFKA_USERNAME"), "Kafka SASL username")
 	sourcePassword       = flag.String("source-sasl-password", os.Getenv("SOURCE_KAFKA_PASSWORD"), "Kafka SASL password")
+	sourceMechanism      = flag.String("source-sasl-mechanism", sarama.SASLTypePlaintext, "Kafka SASL mechanism")
 	sourceScrapeInterval = flag.Duration("source-scrape-interval", 60*time.Second, "Time beetween scrape kafka metrics")
 	sinkProduceInterval  = flag.Duration("sink-produce-interval", 60*time.Second, "Time beetween metrics production")
 )
@@ -69,6 +70,12 @@ func NewKafkaSource(sink Sink) (*KafkaSource, error) {
 		return nil, err
 	}
 	cfg.Net.SASL.User, cfg.Net.SASL.Password, cfg.Net.SASL.Enable = util.GetSASLConfiguration(*sourceUsername, *sourcePassword)
+	cfg.Net.SASL.Mechanism = sarama.SASLMechanism(*sourceMechanism)
+	if *sourceMechanism == sarama.SASLTypeSCRAMSHA512 {
+		cfg.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &util.XDGSCRAMClient{HashGeneratorFcn: util.SHA512} }
+	} else if *sourceMechanism == sarama.SASLTypeSCRAMSHA256 {
+		cfg.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &util.XDGSCRAMClient{HashGeneratorFcn: util.SHA256} }
+	}
 	brokerList := strings.Split(*sourceBrokers, ",")
 
 	client, err := sarama.NewClient(brokerList, cfg)

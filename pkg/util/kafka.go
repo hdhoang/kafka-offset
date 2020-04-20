@@ -1,11 +1,15 @@
 package util
 
 import (
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/tls"
 	"crypto/x509"
+	"hash"
 	"io/ioutil"
 
 	"github.com/sirupsen/logrus"
+	"github.com/xdg/scram"
 )
 
 // GetTLSConfiguration build TLS configuration for kafka
@@ -45,4 +49,32 @@ func GetSASLConfiguration(username string, password string) (string, string, boo
 		return username, password, true
 	}
 	return "", "", false
+}
+
+// https://github.com/Shopify/sarama/blob/master/examples/sasl_scram_client/scram_client.go
+var SHA256 scram.HashGeneratorFcn = func() hash.Hash { return sha256.New() }
+var SHA512 scram.HashGeneratorFcn = func() hash.Hash { return sha512.New() }
+
+type XDGSCRAMClient struct {
+	*scram.Client
+	*scram.ClientConversation
+	scram.HashGeneratorFcn
+}
+
+func (x *XDGSCRAMClient) Begin(userName, password, authzID string) (err error) {
+	x.Client, err = x.HashGeneratorFcn.NewClient(userName, password, authzID)
+	if err != nil {
+		return err
+	}
+	x.ClientConversation = x.Client.NewConversation()
+	return nil
+}
+
+func (x *XDGSCRAMClient) Step(challenge string) (response string, err error) {
+	response, err = x.ClientConversation.Step(challenge)
+	return
+}
+
+func (x *XDGSCRAMClient) Done() bool {
+	return x.ClientConversation.Done()
 }
