@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+    "strings"
 
 	"github.com/ryarnyah/kafka-offset/pkg/metrics"
 	"github.com/ryarnyah/kafka-offset/pkg/sinks/common"
@@ -24,7 +25,7 @@ type Sink struct {
 }
 
 func (s *Sink) kafkaMeter(metric metrics.KafkaMeter) error {
-	fmt.Printf("PUTVAL %s/kafka/%s-%s interval=%s %d:%d,%d:%f,%d:%f,%d:%f,%d:%f\n", *collectdHostname, metric.Name, metric.Key, *collectdInterval,
+	fmt.Printf("PUTVAL %s/kafka/%s-%s interval=%s %d:%d,%d:%f,%d:%f,%d:%f,%d:%f\n", *collectdHostname, metric.Name, strings.ReplaceAll(metric.Key, ".", "_"), *collectdInterval,
 		metric.Timestamp.Unix(), metric.Count(),
 		metric.Timestamp.Unix(), metric.Rate1(),
 		metric.Timestamp.Unix(), metric.Rate5(),
@@ -35,7 +36,7 @@ func (s *Sink) kafkaMeter(metric metrics.KafkaMeter) error {
 }
 
 func (s *Sink) kafkaGauge(metric metrics.KafkaGauge) error {
-	fmt.Printf("PUTVAL %s/kafka/%s-%s interval=%s %d:%d\n", *collectdHostname, metric.Name, metric.Key, *collectdInterval, metric.Timestamp.Unix(), metric.Value())
+	fmt.Printf("PUTVAL %s/kafka/%s-%s interval=%s %d:%d\n", *collectdHostname, metric.Name, strings.ReplaceAll(metric.Key, ".", "_"), *collectdInterval, metric.Timestamp.Unix(), metric.Value())
 	return nil
 }
 
